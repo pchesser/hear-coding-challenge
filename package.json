@@ -1,0 +1,19 @@
+{
+  "name": "hear-subreddit-service",
+  "version": "1.0.0",
+  "description": "A set of services for sending subreddits, tailored to user specifications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pchesser/hear-coding-challenge.git"
+  },
+  "author": "patrick chesser",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pchesser/hear-coding-challenge/issues"
+  },
+  "homepage": "https://github.com/pchesser/hear-coding-challenge#readme"
+}
