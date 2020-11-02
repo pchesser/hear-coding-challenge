@@ -38,6 +38,41 @@ describe('User Service Tests', function() {
         await expect(sut.addUser('bubba@fake.com')).to.eventually.be.rejectedWith(errors.UserExistsError, 'emailAddress: bubba@fake.com already exists');
     });
 
+    it('should throw if the emailAddress is in use', async function() {
+        const mockRepo = {
+            getUserByEmailAddress: async (emailAddress) => {
+                return {
+                    id: 123,
+                    emailAddress: emailAddress,
+                    preferences :{
+                        notificationTime: '08:00:00Z',
+                        favoriteSubReddits: [],
+                        sendNewsletter: false
+                    }
+                }
+            },
+            addUser: async (user) => {
+
+            }
+        };
+        
+        const sut = new Sut(mockRepo);
+
+        await expect(sut.addUser('bubba@fake.com')).to.eventually.be.rejectedWith(errors.UserExistsError, 'emailAddress: bubba@fake.com already exists');
+    });
+
+    it('should throw if the emailAddress is null', async function() {
+              
+        const sut = new Sut(null);
+        await expect(sut.addUser(null)).to.eventually.be.rejectedWith(errors.ValidationError, 'emailAddress cannot be null');
+    });
+
+    it('should throw if the firstName is null', async function() {
+              
+        const sut = new Sut(null);
+        await expect(sut.addUser("email@fake.com", null)).to.eventually.be.rejectedWith(errors.ValidationError, 'firstName cannot be null');
+    });
+
     it('should create a new user if the username is not in use', async function() {
         const mockRepo = { };
         
@@ -45,7 +80,7 @@ describe('User Service Tests', function() {
         mockRepo.getUserByEmailAddress = sinon.fake.resolves(null);
         const sut = new Sut(mockRepo);
 
-        await sut.addUser('bubba@fake.com');
+        await sut.addUser('bubba@fake.com', 'bubba');
 
         mockRepo.getUserByEmailAddress.called.should.be.true;
         mockRepo.addUser.called.should.be.true;

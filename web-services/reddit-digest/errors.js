@@ -35,3 +35,12 @@ class InvalidTimeError extends Error {
 }
 
 exports.InvalidTimeError = InvalidTimeError;
+
+class SubRedditRetrievalError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'SubRedditRetrievalError';
+    }
+}
+
+exports.SubRedditRetrievalError = SubRedditRetrievalError;

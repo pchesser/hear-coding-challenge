@@ -9,18 +9,25 @@ class UserService {
         this.timeService = timeService;
     }
 
-    addUser = async (emailAddress) => {
+    addUser = async (emailAddress, firstName) => {
+        if (!emailAddress) {
+            throw new errors.ValidationError('emailAddress cannot be null');
+        }
+        if (!firstName) {
+            throw new errors.ValidationError('firstName cannot be null');
+        }
         try {
-            const exitingUser = await this.repo.getUserByEmailAddress(emailAddress);
+            const exitingUser = await this.repo.getUserByEmailAddress(emailAddress, firstName);
             if (exitingUser) {
                 console.error(`Attempt to add user with existing email address: ${emailAddress}`);
                 // note: from a security perspective, we may not want to be this helpful with the error message
                 // since the use-case for this is an internal app, we will not worry about that for now. 
                 throw new errors.UserExistsError(`emailAddress: ${emailAddress} already exists`);
             }
-    
+
             const user = {
                 emailAddress: emailAddress,
+                firstName: firstName,
                 favoriteSubReddits: null,
                 notificationPreferences: {
                     notificationTime: '08:00-00:00',
@@ -28,15 +35,19 @@ class UserService {
                     sendNewsletter: false
                 }
             };
-    
-            console.log('calling repo');
-            return await this.repo.addUser(user); 
+
+            return await this.repo.addUser(user);
         } catch (error) {
-            
+            console.error(`Unexpected error encountered when adding new user with emailAddress:${emailAddress} and firstName: ${firstName}. Error: ${error.stack}`);
+            throw error;
         }
     };
 
     updateSendNewsletter = async (userId, sendNewsletter) => {
+        if (!userId) {
+            console.error(`null userId passed`)
+            throw new errors.ValidationError('userId cannot be null');
+        }
         if (sendNewsletter === null || sendNewsletter === undefined) {
             console.error(`Attempt to update sendNewsletter status to null for user ${userId}`);
             throw new errors.ValidationError('status must be true or false');
@@ -55,15 +66,24 @@ class UserService {
             console.debug(`updating preferences`);
             await this.repo.updateUserNotificationPreferences(user);
         } catch (error) {
+            console.error(`Unexpected error encountered when updating sendNewsletter for user ${userId} and sendNewsletter: ${sendNewsletter}. Error: ${error.stack}`);
             throw error;
         }
     };
 
     updateNotificationTime = async (userId, time) => {
-        console.debug(`getting user ${userId}`);
-        const user = await this.#getUserOrThrow(userId);
+        if (!userId) {
+            console.error(`null userId passed`)
+            throw new errors.ValidationError('userId cannot be null');
+        }
+        if (!time) {
+            console.error(`null time passed`)
+            throw new errors.ValidationError('time cannot be null');
+        }
 
         try {
+            const user = await this.#getUserOrThrow(userId);
+
             console.debug(`parsing utc time`);
             const utcTime = this.timeService.convertTimeToUtc(time);
 
@@ -73,14 +93,20 @@ class UserService {
             console.debug(`updating preferences`);
             await this.repo.updateUserNotificationPreferences(user);
         } catch (error) {
+            console.error(`Unexpected error encountered when updating notification time for user ${userId} and time: ${time}. Error: ${error.stack}`);
             throw error;
         }
     };
 
     addSubreddits = async (userId, subreddits) => {
-        if (!userId || !subreddits) {
-            console.error(`Invalid parameter passed. userId ${userId}. subreddit ${subreddit}`);
-            throw new errors.ValidationError(`One or more parameters are null`);
+        if (!userId) {
+            console.error(`null userId passed`)
+            throw new errors.ValidationError('userId cannot be null');
+        }
+
+        if (!subreddits) {
+            console.error(`null subreddits passed`);
+            throw new errors.ValidationError(`subreddits cannot be null'`);
         }
 
         const user = await this.#getUserOrThrow(userId);
@@ -98,7 +124,7 @@ class UserService {
             }
             const normalized = subreddit.toLowerCase();
             subredditSet.add(normalized);
-            console.debug(`subreddit: ${normalized}`);            
+            console.debug(`subreddit: ${normalized}`);
         }
         console.debug('doing array');
         user.favoriteSubReddits = Array.from(subredditSet);
@@ -107,37 +133,41 @@ class UserService {
         try {
             await this.repo.updateUserSubreddits(user);
         } catch (error) {
-            console.error(`Error Adding SubReddit. Error stack ${error.stack}`);
+            console.error(`Error adding subReddits for user ${userId}, and subreddits ${JSON.stringify(subreddits)}. Error stack ${error.stack}`);
             throw error;
         }
     }
 
     deleteSubreddits = async (userId, subreddits) => {
-        if (!userId || !subreddits) {
-            console.error(`Invalid parameter passed. userId ${userId}. subreddits ${subreddit}`);
-            throw new errors.ValidationError(`One or more parameters are null`);
+        if (!userId) {
+            console.error(`null userId passed`)
+            throw new errors.ValidationError('userId cannot be null');
         }
 
-        const user = await this.#getUserOrThrow(userId);
-        if (!user.favoriteSubReddits) {
-            user.favoriteSubReddits = [];
+        if (!subreddits) {
+            console.error(`null subreddits passed`);
+            throw new errors.ValidationError(`subreddits cannot be null'`);
         }
-        const subredditSet = new Set(user.favoriteSubReddits);
-
-        console.debug(`deleting subreddits`);
-        for (const subreddit of subreddits) {
-            if (!subreddit) {
-                console.warn(`Attempt to remove null subreddit to user ${userId}`);
-                // if this becomes a common problem, consider an exception instead
-                continue;
-            }
-            const normalized = subreddit.toLowerCase();
-            subredditSet.delete(normalized);
-            console.debug(`subreddit: ${normalized}`);            
-        }
-        user.favoriteSubReddits = Array.from(subredditSet);
-
         try {
+            const user = await this.#getUserOrThrow(userId);
+            if (!user.favoriteSubReddits) {
+                user.favoriteSubReddits = [];
+            }
+            const subredditSet = new Set(user.favoriteSubReddits);
+
+            console.debug(`deleting subreddits`);
+            for (const subreddit of subreddits) {
+                if (!subreddit) {
+                    console.warn(`Attempt to remove null subreddit to user ${userId}`);
+                    // if this becomes a common problem, consider an exception instead
+                    continue;
+                }
+                const normalized = subreddit.toLowerCase();
+                subredditSet.delete(normalized);
+                console.debug(`subreddit: ${normalized}`);
+            }
+            user.favoriteSubReddits = Array.from(subredditSet);
+
             await this.repo.updateUserSubreddits(user, true);
             if (!user.favoriteSubReddits.length) {
                 user.notificationPreferences.sendNewsletter = false;
@@ -151,7 +181,17 @@ class UserService {
     };
 
     getUserById = async (userId) => {
-        return await this.#getUserOrThrow(userId);
+        if (!userId) {
+            console.error(`null userId passed`)
+            throw new errors.ValidationError('userId cannot be null');
+        }
+        try {
+            const user = await this.#getUserOrThrow(userId);
+            return user;
+        } catch (error) {
+            console.error(`Error Getting User. Error stack ${error.stack}`);
+            throw error;
+        }
     };
 
     #getUserOrThrow = async (userId) => {

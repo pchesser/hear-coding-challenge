@@ -6,11 +6,13 @@ module.exports = (app, config, userService) => {
 
     app.get('/api/user/:id', (req, res) => {
         try {
-            const user = userService.getUserById
+            const user = userService.getUserById;
             if (!user) {
                 res.status(404).json("User Not Found");
             }
             else {
+                // no need to send this to the caller, as it's an internal property
+                delete user.notificationPreferences.utcNotificationTime;
                 res.status(200).json(user);
             }
         } catch (error) {
@@ -97,7 +99,7 @@ module.exports = (app, config, userService) => {
             }
         }
     });
-    
+
     app.put('/api/user/:id/sendnewsletter', async (req, res) => {
         const payload = req.body;
         console.log(`${JSON.stringify(payload)}`);
