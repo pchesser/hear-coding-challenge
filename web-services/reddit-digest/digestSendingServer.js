@@ -1,7 +1,5 @@
 'use strict';
 
-const { EmailService } = require('./data-services/emailService');
-
 (async () => {
 
 
@@ -11,7 +9,7 @@ const DigestRepo = require('./repos/digestRepo').DigestRepo;
 const TimeService = require('./data-services/timeService').TimeService;
 const RedditService = require('./data-services/redditService').RedditService;
 const HttpService = require('./data-services/httpService').HttpService;
-const PollingService = require('./data-services/digestService').PollingService;
+const DigestService = require('./data-services/digestService').DigestService;
 const EmailService = require('./data-services/emailService').EmailService;
 
 nconf.argv().env('__');
@@ -28,9 +26,9 @@ try {
     const httpService = new HttpService();
     const emailService = new EmailService();
     const redditService = new RedditService(httpService, config);
-    const pollingService = new PollingService(userRepo, digestRepo, redditService, timeService, emailService, config);
+    const digestService = new DigestService(userRepo, digestRepo, redditService, timeService, emailService, config);
 
-    await pollingService.pollForDigestsToSend();
+    await digestService.pollForDigestsToSend();
 
 } catch (error) {
     console.error(`unexpected error encountered. Error: ${error.stack}`);
@@ -38,5 +36,8 @@ try {
 } finally {
     userRepo.client.close();
 }
-})();
+})().catch(error => {
+    console.error(error);
+    throw error;
+});
 

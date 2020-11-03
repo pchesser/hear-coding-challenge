@@ -71,8 +71,8 @@ class TimeService {
 
         const tokens = notificationPreferences.notificationTime.split(':');    
         return {
-            hour: parseInt(hour),
-            minute: parseInt(minute)
+            hour: parseInt(tokens[0]),
+            minute: parseInt(tokens[1])
         };
     }
 }

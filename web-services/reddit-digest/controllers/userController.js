@@ -102,7 +102,7 @@ module.exports = (app, config, userService) => {
         const payload = req.body;
         console.log(`${JSON.stringify(payload)}`);
         try {
-            await userService.updateSendNewsletter(req.params.id, payload.senddigest);
+            await userService.updateSendDigest(req.params.id, payload.sendDigest);
             res.status(200).json('updated');
         } catch (error) {
             if (typeof error === 'ValidationError') {

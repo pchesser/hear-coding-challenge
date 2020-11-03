@@ -1,6 +1,6 @@
 'use strict';
 
-class PollingService {
+class DigestService {
     constructor(userRepo, digestRepo, redditService, timeService, emailService, config) {
         this.userRepo = userRepo;
         this.digestRepo = digestRepo;
@@ -22,7 +22,7 @@ class PollingService {
 
         const notificationTimeUtc = this.timeService.getCurrentToTheMinuteUtcTimeStamp();
 
-        console.debug(notificationTimeUtc);
+        console.debug(`Polling for digests to send at ${notificationTimeUtc}`);
 
         // Note: this is a bit of a naive implementation because of time constraints.
         // As the data set grows, this is less likely to complete within a minute and we
@@ -31,21 +31,23 @@ class PollingService {
         // worker process handle them one by one, while this waits for the next polling interval.
 
         try {
-            const digestsToSend = await this.digestRepo.getDigestsToSend(notificationTimeUtc);
-            if (!digestsToSend) {
+            console.debug(`Querying for digests to send`)
+            const digestsToSendCursor = this.digestRepo.getDigestsToSend(notificationTimeUtc);
+            if (!digestsToSendCursor) {
                 console.info(`No users found to notify at: ${notificationTimeUtc}`);
                 return;
             }
 
-            for await (digest of digestsToSend) {
-                await this.emailService.send(message);
+            console.debug('enumerating cursor');
+            for await (const digest of digestsToSendCursor) {
+                await this.emailService.send(digest);
             }
         } catch (error) {
             console.error(`Unexpected error sending newsletters: ${error.stack}`);
             throw error;
         }
     }
-
+ 
     #createDigestsForTomorrowDistribution = async () => {
         const cachedSubredditData = new Map();
         let user = null;
@@ -54,8 +56,6 @@ class PollingService {
         try {
             console.debug(`getting users expecting digests`);
             usersWithActiveNotificationStatusCursor = this.userRepo.getUsersExpectingDigests();
-
-            console.debug(`cursor count: ${await usersWithActiveNotificationStatusCursor.count()}`)
 
             if (!usersWithActiveNotificationStatusCursor) {
                 console.info(`No users with active notification status found.`);
@@ -67,7 +67,7 @@ class PollingService {
         }
 
         try {
-            console.debug('entering loop');
+            console.debug('enumerating cursor');
             for await (const u of usersWithActiveNotificationStatusCursor) {
                 user = u;
                 const digest = {
@@ -116,4 +116,4 @@ class PollingService {
     }
 }
 
-exports.PollingService = PollingService;
+exports.DigestService = DigestService;

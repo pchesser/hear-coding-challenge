@@ -11,7 +11,7 @@ class DigestRepo {
         this.connection = this.client.connect();
     }
 
-    getDigestsToSend = async (sendDateTime) => {
+    getDigestsToSend = (sendDateTime) => {
         try {
 
             console.log('getting db');
