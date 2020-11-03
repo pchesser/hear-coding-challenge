@@ -49,7 +49,7 @@ module.exports = (app, config, userService) => {
         const payload = req.body;
         console.log(payload);
         try {
-            await userService.updateNotificationTime(req.params.id, payload.notificationTime);
+            await userService.updateNotificationTime(req.params.id, payload.notificationTime, payload.timeZone);
             res.status(200).json('updated');
         } catch (error) {
             if (typeof error === 'ValidationError') {
@@ -98,11 +98,11 @@ module.exports = (app, config, userService) => {
         }
     });
 
-    app.put('/api/user/:id/sendnewsletter', async (req, res) => {
+    app.put('/api/user/:id/senddigest', async (req, res) => {
         const payload = req.body;
         console.log(`${JSON.stringify(payload)}`);
         try {
-            await userService.updateSendNewsletter(req.params.id, payload.sendNewsletter);
+            await userService.updateSendNewsletter(req.params.id, payload.senddigest);
             res.status(200).json('updated');
         } catch (error) {
             if (typeof error === 'ValidationError') {

@@ -6,35 +6,37 @@ const { EmailService } = require('./data-services/emailService');
 
 
 const nconf = require('nconf');
-const UserService = require('./data-services/userService').UserService;
 const UserRepo = require('./repos/userRepo').UserRepo;
+const DigestRepo = require('./repos/digestRepo').DigestRepo;
 const TimeService = require('./data-services/timeService').TimeService;
 const RedditService = require('./data-services/redditService').RedditService;
 const HttpService = require('./data-services/httpService').HttpService;
-const PollingService = require('./data-services/pollingService').PollingService;
+const PollingService = require('./data-services/digestService').PollingService;
 const EmailService = require('./data-services/emailService').EmailService;
+
 nconf.argv().env('__');
 nconf.defaults({ conf: `${__dirname}/config.json` });
 nconf.file(nconf.get('conf'));
-let repo = null;
+let userRepo = null;
+let digestRepo = null;
 
 try {
     const config = nconf.get();
-    repo = new UserRepo(config.mongo.connectionString);
+    digestRepo = new DigestRepo(config.mongo.connectionString);
+    userRepo = new UserRepo(config.mongo.connectionString);
     const timeService = new TimeService();
     const httpService = new HttpService();
     const emailService = new EmailService();
     const redditService = new RedditService(httpService, config);
-    const userService = new UserService(repo, timeService, redditService, emailService);
-    const pollingService = new PollingService(userService, config);
+    const pollingService = new PollingService(userRepo, digestRepo, redditService, timeService, emailService, config);
 
-    await pollingService.pollForNotifications();
+    await pollingService.pollForDigestsToSend();
 
 } catch (error) {
     console.error(`unexpected error encountered. Error: ${error.stack}`);
     throw (error);
 } finally {
-    repo.client.close();
+    userRepo.client.close();
 }
 })();
 

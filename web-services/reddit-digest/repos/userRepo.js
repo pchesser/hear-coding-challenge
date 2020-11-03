@@ -1,5 +1,6 @@
 'use strict';
 
+// this should get broken down into 
 const { MongoClient } = require('mongodb');
 const ObjectId = require('mongodb').ObjectID;
 
@@ -111,7 +112,7 @@ class UserRepo {
         }
     };
 
-    getUsersExpectingNewsletters = async (notificationTimeUtc) => {
+    getUsersExpectingDigests = () => {
         try {
 
             console.log('getting db');
@@ -120,18 +121,10 @@ class UserRepo {
             const collection = db.collection('users');
 
             console.log('querying');
-            const query = { 
-                "$and": [ 
-                    {"notificationPreferences.utcNotificationTime" : {"$eq": notificationTimeUtc}}, 
-                    {"notificationPreferences.sendNewsletter": {"$eq":true } }
-                ]
-            };
+            const query = { "notificationPreferences.sendNewsletter": { "$eq": true } };
 
-            const found = await collection.find(query);
-            // this is not going to scale well as the collection grows. 
-            // At that point, it may be better to return an iterator to go
-            // through the cursor. 
-            return await found.toArray();
+            const cursor = collection.find(query);                        
+            return cursor;
         } catch (error) {
             console.error(`Unexpected error. error: ${error.stack}`);
             throw error;

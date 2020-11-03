@@ -13,7 +13,7 @@ class RedditService {
     }
 
     getSubRedditData = async (subReddit) => {
-        const url = `${this.redditBaseUrl}${subReddit}.json?limit=${this.subredditLimit}`;
+        const url = `${this.redditBaseUrl}${subReddit}/top.json?limit=${this.subredditLimit}`;
         const result = {
             subredditAddress:`${this.redditBaseUrl}${subReddit}`,
             posts: []

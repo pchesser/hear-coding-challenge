@@ -35,31 +35,9 @@ describe('User Service Tests', function() {
         
         const sut = new Sut(mockRepo);
 
-        await expect(sut.addUser('bubba@fake.com')).to.eventually.be.rejectedWith(errors.UserExistsError, 'emailAddress: bubba@fake.com already exists');
+        await expect(sut.addUser('bubba@fake.com', 'bubba')).to.eventually.be.rejectedWith(errors.UserExistsError, 'emailAddress: bubba@fake.com already exists');
     });
 
-    it('should throw if the emailAddress is in use', async function() {
-        const mockRepo = {
-            getUserByEmailAddress: async (emailAddress) => {
-                return {
-                    id: 123,
-                    emailAddress: emailAddress,
-                    preferences :{
-                        notificationTime: '08:00:00Z',
-                        favoriteSubReddits: [],
-                        sendNewsletter: false
-                    }
-                }
-            },
-            addUser: async (user) => {
-
-            }
-        };
-        
-        const sut = new Sut(mockRepo);
-
-        await expect(sut.addUser('bubba@fake.com')).to.eventually.be.rejectedWith(errors.UserExistsError, 'emailAddress: bubba@fake.com already exists');
-    });
 
     it('should throw if the emailAddress is null', async function() {
               

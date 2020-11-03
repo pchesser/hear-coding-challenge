@@ -1,8 +1,6 @@
 'use strict';
 
 const errors = require('../errors');
-const moment = require('moment');
-
 class UserService {
     constructor(repo, timeService, redditService, emailService) {
         this.repo = repo;
@@ -33,7 +31,8 @@ class UserService {
                 firstName: firstName,
                 favoriteSubReddits: null,
                 notificationPreferences: {
-                    utcNotificationTime: '08:00.000Z',
+                    notificationTime: '08:00',
+                    timeZone: 'Etc/UTC',
                     sendNewsletter: false
                 }
             };
@@ -45,17 +44,17 @@ class UserService {
         }
     };
 
-    updateSendNewsletter = async (userId, sendNewsletter) => {
+    updateSendDigest = async (userId, sendDigest) => {
         if (!userId) {
             console.error(`null userId passed`)
             throw new errors.ValidationError('userId cannot be null');
         }
-        if (sendNewsletter === null || sendNewsletter === undefined) {
+        if (sendDigest === null || sendDigest === undefined) {
             console.error(`Attempt to update sendNewsletter status to null for user ${userId}`);
             throw new errors.ValidationError('status must be true or false');
         }
-        if (typeof sendNewsletter !== 'boolean') {
-            console.error(`Attempt to send non boolean value for updateSendNewsletter. Value: ${sendNewsletter}`);
+        if (typeof sendDigest !== 'boolean') {
+            console.error(`Attempt to send non boolean value for updateSendNewsletter. Value: ${sendDigest}`);
             throw new errors.ValidationError('status must be true or false');
         }
         try {
@@ -63,35 +62,41 @@ class UserService {
 
             const user = await this.#getUserOrThrow(userId);
 
-            user.notificationPreferences.sendNewsletter = sendNewsletter;
+            user.notificationPreferences.sendDigest = sendDigest;
 
             console.debug(`updating preferences`);
             await this.repo.updateUserNotificationPreferences(user);
         } catch (error) {
-            console.error(`Unexpected error encountered when updating sendNewsletter for user ${userId} and sendNewsletter: ${sendNewsletter}. Error: ${error.stack}`);
+            console.error(`Unexpected error encountered when updating sendNewsletter for user ${userId} and sendNewsletter: ${sendDigest}. Error: ${error.stack}`);
             throw error;
         }
     };
 
-    updateNotificationTime = async (userId, utcTime) => {
+    updateNotificationTime = async (userId, notificationTime, timeZone) => {
         if (!userId) {
             console.error(`null userId passed`)
             throw new errors.ValidationError('userId cannot be null');
         }
-        if (!utcTime) {
-            console.error(`null utcTime passed`)
+        if (!notificationTime) {
+            console.error(`null notificationTime passed`)
             throw new errors.ValidationError('utcTime cannot be null');
+        }
+        if (!timeZone) {
+            console.error(`null timeZone passed`)
+            throw new errors.ValidationError('timeZone cannot be null');
         }
 
         try {
             const user = await this.#getUserOrThrow(userId);
-            const formattedAndValidated = this.timeService.convertTimeToExpectedFormat(utcTime);
+            this.timeService.validateTimeFormat(notificationTime);
+            this.timeService.validateTimeZone(timeZone);
 
-            user.notificationPreferences.utcNotificationTime = formattedAndValidated;
+            user.notificationPreferences.notificationTime = notificationTime;
+            user.notificationPreferences.timeZone = timeZone;
 
             await this.repo.updateUserNotificationPreferences(user);
         } catch (error) {
-            console.error(`Unexpected error encountered when updating notification time for user ${userId} and time: ${utcTime}. Error: ${error.stack}`);
+            console.error(`Unexpected error encountered when updating notification time for user ${userId} and time: ${notificationTime}. Error: ${error.stack}`);
             throw error;
         }
     };
