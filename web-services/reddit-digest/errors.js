@@ -44,3 +44,12 @@ class SubRedditRetrievalError extends Error {
 }
 
 exports.SubRedditRetrievalError = SubRedditRetrievalError;
+
+class MongoConnectionError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'MongoConnectionError';
+    }
+}
+
+exports.MongoConnectionError = MongoConnectionError;

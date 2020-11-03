@@ -1,7 +1,4 @@
 'use strict';
-
-const errors = require('../errors');
-
 module.exports = (app, config, userService) => {
 
     app.get('/api/user/:id', (req, res) => {
@@ -29,7 +26,7 @@ module.exports = (app, config, userService) => {
         const payload = req.body;
         console.log(payload);
         try {
-            const createdId = await userService.addUser(payload.emailaddress);
+            const createdId = await userService.addUser(payload.emailaddress, payload.firstName);
 
             const responseMessage = {
                 location: `http://${config.server.host}:${config.server.port}/api/user/${createdId}`
@@ -52,6 +49,7 @@ module.exports = (app, config, userService) => {
         const payload = req.body;
         console.log(payload);
         try {
+            await userService.updateNotificationTime(req.params.id, payload.notificationTime);
             res.status(200).json('updated');
         } catch (error) {
             if (typeof error === 'ValidationError') {
@@ -116,5 +114,9 @@ module.exports = (app, config, userService) => {
                 res.status(500).json(`Unexpected exception.`);
             }
         }
+    });
+
+    app.post('/api/notifications', async (req, res) =>{
+
     });
 };

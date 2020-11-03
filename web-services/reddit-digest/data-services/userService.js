@@ -1,16 +1,19 @@
 'use strict';
 
 const errors = require('../errors');
+const moment = require('moment');
 
 class UserService {
-    constructor(repo, redditService, timeService) {
+    constructor(repo, timeService, redditService, emailService) {
         this.repo = repo;
-        this.redditService = redditService;
         this.timeService = timeService;
+        this.redditService = redditService;
+        this.emailService = emailService;
     }
 
     addUser = async (emailAddress, firstName) => {
         if (!emailAddress) {
+            console.error(`null emailAddress passed`);
             throw new errors.ValidationError('emailAddress cannot be null');
         }
         if (!firstName) {
@@ -30,7 +33,6 @@ class UserService {
                 firstName: firstName,
                 favoriteSubReddits: null,
                 notificationPreferences: {
-                    notificationTime: '08:00-00:00',
                     utcNotificationTime: '08:00.000Z',
                     sendNewsletter: false
                 }
@@ -71,29 +73,25 @@ class UserService {
         }
     };
 
-    updateNotificationTime = async (userId, time) => {
+    updateNotificationTime = async (userId, utcTime) => {
         if (!userId) {
             console.error(`null userId passed`)
             throw new errors.ValidationError('userId cannot be null');
         }
-        if (!time) {
-            console.error(`null time passed`)
-            throw new errors.ValidationError('time cannot be null');
+        if (!utcTime) {
+            console.error(`null utcTime passed`)
+            throw new errors.ValidationError('utcTime cannot be null');
         }
 
         try {
             const user = await this.#getUserOrThrow(userId);
+            const formattedAndValidated = this.timeService.convertTimeToExpectedFormat(utcTime);
 
-            console.debug(`parsing utc time`);
-            const utcTime = this.timeService.convertTimeToUtc(time);
+            user.notificationPreferences.utcNotificationTime = formattedAndValidated;
 
-            user.notificationPreferences.notificationTime = time;
-            user.notificationPreferences.utcNotificationTime = utcTime;
-
-            console.debug(`updating preferences`);
             await this.repo.updateUserNotificationPreferences(user);
         } catch (error) {
-            console.error(`Unexpected error encountered when updating notification time for user ${userId} and time: ${time}. Error: ${error.stack}`);
+            console.error(`Unexpected error encountered when updating notification time for user ${userId} and time: ${utcTime}. Error: ${error.stack}`);
             throw error;
         }
     };
@@ -190,6 +188,48 @@ class UserService {
             return user;
         } catch (error) {
             console.error(`Error Getting User. Error stack ${error.stack}`);
+            throw error;
+        }
+    };
+
+    sendNewsletters = async (notificationTimeUtc) => {
+        if (!notificationTimeUtc) {
+            console.error(`null notificationTimeUtc passed`)
+            throw new errors.ValidationError('notificationTimeUtc cannot be null');
+        }
+        try {
+            const usersToNotify = await this.repo.getUsersExpectingNewsletters(notificationTimeUtc);
+            if (!usersToNotify || !usersToNotify.length) {
+                console.info(`No users found to notify at: ${notificationTimeUtc}`);
+                return;
+            }
+            let user = null;
+            let message = null;
+            try {
+                for (user of usersToNotify) {
+                    message = {
+                        firstName: user.firstName,
+                        emailAddress: user.emailAddress,
+                        subredditData: []
+                    };
+                    for (const subreddit of user.favoriteSubReddits) {
+                        const result = await this.redditService.getSubRedditData(subreddit);
+                        if (!result) {
+                            continue;
+                            // going to assume the user at least wants the subreddit data we could find. Moving on to next
+                        }
+                        message.subredditData.push(result);
+                    }
+                    await this.emailService.send(message);
+                }
+
+            } catch (error) {
+                console.error(`Error sending newsletter for user: ${user._id}. Error: ${error.stack}`);
+                //not throwing, moving on to next user so we can get as many out as possible.
+            }
+
+        } catch (error) {
+            console.error(`Unexpected error sending newsletters: ${error.stack}`);
             throw error;
         }
     };

@@ -5,7 +5,8 @@
   "main": "web-services/b4/server.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --no-package --recursive",
-    "start": "nodemon web-services\\reddit-digest\\server.js "
+    "start": "nodemon web-services\\reddit-digest\\webServer.js ",
+    "startPolling": "nodemon web-services\\reddit-digest\\taskServer.js"
   },
   "repository": {
     "type": "git",

@@ -3,16 +3,19 @@
 const errors = require('../errors');
 
 class RedditService {
-    constructor(httpService, redditBaseUrl, subredditLimit) {
+    constructor(httpService, config) {
         this.httpService = httpService;
-        this.redditBaseUrl = redditBaseUrl;
-        this.subredditLimit = subredditLimit;
+        this.redditBaseUrl = config.reddit.baseUrl;
+        this.subredditLimit = config.reddit.subredditLimit;
+
+        console.log(this.redditBaseUrl);
+        console.log(this.subredditLimit);
     }
 
     getSubRedditData = async (subReddit) => {
-        const url = `${redditBaseUrl}/r/${subReddit}.json?limit=${this.subredditLimit}`;
-        const response = {
-            subredditAddress:`${redditBaseUrl}/r/${subReddit}`,
+        const url = `${this.redditBaseUrl}${subReddit}.json?limit=${this.subredditLimit}`;
+        const result = {
+            subredditAddress:`${this.redditBaseUrl}${subReddit}`,
             posts: []
         };
 
@@ -21,23 +24,21 @@ class RedditService {
         }
         try {
             const response = await this.httpService.getRequest(url);
-            
             if (response.status > 199 && response.status < 300) {
-                const children = response.data.children;                
-
+                const children = response.data.data.children;                
                 if (!children.length){
                     throw new errors.NotFoundError('Error retrieving subreddits.');
                 }
 
                 for (const child of children) {
-                    response.posts.push({
-                        thumbnail: child.thumbnail,
-                        score: child.score,
-                        title: child.title
+                    result.posts.push({
+                        thumbnail: child.data.thumbnail,
+                        score: child.data.score,
+                        title: child.data.title
                     });
                 }
 
-                return response;
+                return result;
             } else {
                 console.error(`Error response received from reddit. Response ${response}`)
                 throw new errors.SubRedditRetrievalError(`Error response received from reddit. Response ${response}`);

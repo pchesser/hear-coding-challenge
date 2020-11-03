@@ -4,24 +4,37 @@ const moment = require('moment');
 const errors = require('../errors');
 
 class TimeService {
+    #regex = /^\d{2}:\d{2}$/;
+
     constructor() {
     }
 
-    convertTimeToUtc(time) {
+    convertTimeToExpectedFormat(time) {
         if (!time) {
             console.error('null time passed.')
             throw new errors.ValidationError('time cannot be null');
         }
+        // sanity check
+        if (!this.#regex.test(time)) {
+            console.error(`invalid time passed. time: ${time}`)
+            throw new errors.InvalidTimeError('time must be in hh:mm format, in UTC timezone');
+        }
 
         console.debug(`parsing time. ${time}`);
-        const parsed = new moment.utc(`2020-11-01T${time}`);
+        const tokens = time.split(':');
+        const hour = parseInt(tokens[0]);
+        const minutes = parseInt(tokens[1]);
 
-        if (parsed instanceof moment && parsed.format() !== 'Invalid date') {
-
-            return `${parsed.format('hh:mm')}:00.000Z`;
+        if (hour > 23) {
+            console.error(`invalid time passed. time: ${time}`);
+            throw new errors.InvalidTimeError('hours must be between 00 - 23');
         }
-        console.log(`Error parsing time: ${parsed}`);
-        throw new errors.InvalidTimeError(`${time} is not a valid time string`);
+        if (minutes > 59) {
+            console.error(`invalid time passed. time: ${time}`);
+            throw new errors.InvalidTimeError('minutes must be between 00 - 59');
+        }
+
+        return `${time}:00.000Z`;
     }
 }
 
