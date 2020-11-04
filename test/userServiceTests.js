@@ -15,7 +15,7 @@ const Sut = require('../web-services/reddit-digest/data-services/userService').U
 
 describe('User Service Tests', function() {
     
-    it('should throw if the emailAddress is in use', async function() {
+    it('addUser should throw if the emailAddress is in use', async function() {
         const mockRepo = {
             getUserByEmailAddress: async (emailAddress) => {
                 return {
@@ -39,19 +39,32 @@ describe('User Service Tests', function() {
     });
 
 
-    it('should throw if the emailAddress is null', async function() {
+    it('addUser should throw if the emailAddress is null', async function() {
               
         const sut = new Sut(null);
         await expect(sut.addUser(null)).to.eventually.be.rejectedWith(errors.ValidationError, 'emailAddress cannot be null');
     });
 
-    it('should throw if the firstName is null', async function() {
+    it('addUser should throw if the firstName is null', async function() {
               
         const sut = new Sut(null);
         await expect(sut.addUser("email@fake.com", null)).to.eventually.be.rejectedWith(errors.ValidationError, 'firstName cannot be null');
     });
 
-    it('should create a new user if the username is not in use', async function() {
+    it('addUser should create a new user if the username is not in use', async function() {
+        const mockRepo = { };
+        
+        mockRepo.addUser = sinon.fake.resolves(true);
+        mockRepo.getUserByEmailAddress = sinon.fake.resolves(null);
+        const sut = new Sut(mockRepo);
+
+        await sut.addUser('bubba@fake.com', 'bubba');
+
+        mockRepo.getUserByEmailAddress.called.should.be.true;
+        mockRepo.addUser.called.should.be.true;
+    });
+    
+    it('addUser should create a new user if the username is not in use', async function() {
         const mockRepo = { };
         
         mockRepo.addUser = sinon.fake.resolves(true);

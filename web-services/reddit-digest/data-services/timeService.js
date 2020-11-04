@@ -45,25 +45,28 @@ class TimeService {
     validateTimeFormat = (time) => {
         const tokens = time.split(':');
         if (tokens.length !== 2) {
-            console.error(`invalid notificationTime passed. notificationPreferences: ${JSON.stringify(notificationPreferences)}`)
+            console.error(`invalid notificationTime passed. notificationTime: ${time}`);
             throw new errors.InvalidTimeError('notificationTime must be in format "hh:mm"');
         }
 
         const hour = parseInt(tokens[0]);
         if (isNaN(hour) || hour < 0 || hour > 23) {
-            console.error(`invalid notificationTime passed. notificationPreferences: ${JSON.stringify(notificationPreferences)}`)
+            console.error(`invalid notificationTime passed. notificationTime: ${time}`);
             throw new errors.InvalidTimeError('notificationTime must be in format "hh:mm"');
         }
 
         const minute = parseInt(tokens[1]);
         if (isNaN(minute) || minute < 0 || minute > 59) {
-            console.error(`invalid notificationTime passed. notificationPreferences: ${JSON.stringify(notificationPreferences)}`)
+            console.error(`invalid notificationTime passed. notificationPreferences: ${time}`);
             throw new errors.InvalidTimeError('notificationTime must be in format "hh:mm"');
         }
     };
 
     validateTimeZone = (timeZone) => {
-        return this.#validTimeZones.has(timeZone);
+        if (! this.#validTimeZones.has(timeZone)) {
+            console.error(`Invalid timezone passed. timezone: ${timeZone}`);
+            throw new errors.ValidationError(`Invalid timezone.`);
+        }
     };
 
     #getHourAndMinuteFromPreferences = (notificationPreferences) => {

@@ -7,9 +7,6 @@ class RedditService {
         this.httpService = httpService;
         this.redditBaseUrl = config.reddit.baseUrl;
         this.subredditLimit = config.reddit.subredditLimit;
-
-        console.log(this.redditBaseUrl);
-        console.log(this.subredditLimit);
     }
 
     getSubRedditData = async (subReddit) => {
@@ -24,12 +21,14 @@ class RedditService {
         }
         try {
             const response = await this.httpService.getRequest(url);
+
             if (response.status > 199 && response.status < 300) {
-                const children = response.data.data.children;                
-                if (!children.length){
+                if (!response.data.data || !response.data.data.children || !response.data.data.children.length){
+                    console.error(`No subreddits found for subreddit: ${subReddit}`);
                     throw new errors.NotFoundError('Error retrieving subreddits.');
                 }
 
+                const children = response.data.data.children;    
                 for (const child of children) {
                     result.posts.push({
                         thumbnail: child.data.thumbnail,

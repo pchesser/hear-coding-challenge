@@ -11,7 +11,7 @@ class DigestService {
     }
 
     pollForDigestsToSend = async () => {
-        setInterval(this.#sendDigestsForCurrentTime, this.config.reddit.pollingInterval);
+        setInterval(this.#sendDigestsForCurrentTime, this.config.reddit.digestSendPollingInterval);
     }
 
     pollForDigestCreation = async () => {

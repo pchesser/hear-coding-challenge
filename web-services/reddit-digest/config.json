@@ -11,7 +11,7 @@
         "baseUrl": "http://reddit.com/r/",
         "subredditLimit": 3,
         "notificationPath": "/api/",
-        "pollingInterval": 6000,
+        "digestSendPollingInterval": 6000,
         "digestCreationPollingInterval": 6000
     }
 }
