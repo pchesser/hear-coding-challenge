@@ -1,6 +1,12 @@
 # Reddit Digest Service
 This document is a high level overview of some of the design decisions that were made for this challenge. One of the biggest items of note is that I a chose to implement the API with express, and the data store with MongoDB. I am an amateur with both technologies, so I apologize for any glaring errors. Professionally, I have been working with AWS technologies, so I would probably have implemented the API with APIGateway, and the datastore with DynamoDB. But, if I did that, there wouldn't be anything to test or to look at aside from some terraform files, and that just sounds boring! 
 
+## Running the code
+The following tasks will run the various servers:
+"startWebServer": "nodemon web-services\\reddit-digest\\webServer.js",
+"startDigestCreationPolling":"nodemon web-services\\reddit-digest\\digestCreationServer.js",
+"startDigestSendPolling":"nodemon web-services\\reddit-digest\\digestSendingServer.js"
+
 ## Datastore Implementation Notes
 I chose MongoDB as the backing data store. A document store seemed like a good fit, especially for storage of the message templates. Normally I would have included scripts to create the collections/indexes, but created them directly through the GUI to save some time. Here is what was created.
 
