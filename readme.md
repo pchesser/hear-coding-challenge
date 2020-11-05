@@ -3,9 +3,9 @@ This document is a high level overview of some of the design decisions that were
 
 ## Running the code
 The following tasks will run the various servers:
-"startWebServer": "nodemon web-services\\reddit-digest\\webServer.js",
-"startDigestCreationPolling":"nodemon web-services\\reddit-digest\\digestCreationServer.js",
-"startDigestSendPolling":"nodemon web-services\\reddit-digest\\digestSendingServer.js"
+* "startWebServer": "nodemon web-services\\reddit-digest\\webServer.js",
+* "startDigestCreationPolling":"nodemon web-services\\reddit-digest\\digestCreationServer.js",
+* "startDigestSendPolling":"nodemon web-services\\reddit-digest\\digestSendingServer.js"
 
 The Digest Creation Polling Service is set to run once every 24 hours, so that should be updated for testing. It can be updated in the config.json's reddit.digestCreationPollingInterval property.
 
