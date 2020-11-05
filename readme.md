@@ -26,7 +26,7 @@ I chose MongoDB as the backing data store. A document store seemed like a good f
 This collection stores the data pertinent to the user: name, email address, notification preferences and the subreddits the user would like to receive in their digest. 
 
 Example Document
-{
+```{
     "_id": {
         "$oid":"5fa0884aa2f78f44b0a65e9f"
     },
@@ -39,7 +39,7 @@ Example Document
         "sendDigest": true
         }
     }
-}
+}```
   
 Items of note:
 * timeZone needs to be a valid entry from https://www.iana.org/time-zones time zone database
@@ -57,7 +57,7 @@ Each entry in this collection represents a daily digest that will be sent to a u
 This table is a good candidate to be "culled" after a specified time period (say, 30 days) so that it doesn't grow too big and become hard to maintain. Culling is fair game in this case because, after the day the digest is supposed to be sent, it loses value exponentially. We could consider moving data to a historical collection, or other data store, after 30 days if we want to keep it around for reporting. 
 
 Example Document
-{
+```{
   "_id": {
     "$oid": "5fa1c5e2d8271d2d68ee9d56"
   },
@@ -106,7 +106,7 @@ Example Document
     }
   ],
   "sendDateTime": "2020-11-04T23:00:00.000Z"
-}
+}```
 
 Items of note:
 * sendDateTime is in UTC. The time is created from the combo of timeZone and notificationTime in the user collection
@@ -162,7 +162,7 @@ If we wish to provide other sorts of notifications, there are some changes we ne
 
 We would need to do a bit of rework on the services I created (I built them this way on purpose, so that we could have this discussion). The notification preferences would be updated to look something like this:
 
-"notificationPreferences": [{ 
+```"notificationPreferences": [{ 
             "notificationType": "email",
             "notificationAddressee": "patrick5@fake.com",
             "notificationTime": "15:43",
@@ -175,11 +175,11 @@ We would need to do a bit of rework on the services I created (I built them this
             "notificationTime": "08:00",
             "timeZone": "America/Denver",
             "sendDigest": true
-        }]
+        }]```
 
 For each notification type, we would generate a message to SNS. The message would look something like this:
 
-{
+```{
     "notificationType": "slack",
     "notificationAddressee": "mySlackUserName",
     "digestLocation": "arn:aws:s3:::hear-reddit-digest.com/digest-payloads/slackSampleNotification"
@@ -189,7 +189,7 @@ Or this:
     "notificationType": "email",
     "notificationAddressee": "patrick5@fake.com",
     "digestLocation": "arn:aws:s3:::hear-reddit-digest.com/digest-payloads/emailSampleNotification"
-}
+}```
 
 Rather than posting to the email service directly, the Notification Sending Service would publish these messages to SNS. In addition, instead of sending the payload directly in the SNS message, the Notification Sending Service would instead place the payload in an S3 bucket, and include the link to the bucket in the message. This will keep the messages under the 256k hard limit that SNS enforces.
 
