@@ -50,11 +50,11 @@ class UserService {
             throw new errors.ValidationError('userId cannot be null');
         }
         if (sendDigest === null || sendDigest === undefined) {
-            console.error(`Attempt to update sendNewsletter status to null for user ${userId}`);
+            console.error(`Attempt to update sendDigest status to null for user ${userId}`);
             throw new errors.ValidationError('status must be true or false');
         }
         if (typeof sendDigest !== 'boolean') {
-            console.error(`Attempt to send non boolean value for updateSendNewsletter. Value: ${sendDigest}`);
+            console.error(`Attempt to send non boolean value for updateSendDigest. Value: ${sendDigest}`);
             throw new errors.ValidationError('status must be true or false');
         }
         try {
@@ -67,7 +67,7 @@ class UserService {
             console.debug(`updating preferences`);
             await this.repo.updateUserNotificationPreferences(user);
         } catch (error) {
-            console.error(`Unexpected error encountered when updating sendNewsletter for user ${userId} and sendNewsletter: ${sendDigest}. Error: ${error.stack}`);
+            console.error(`Unexpected error encountered when updating sendNewsletter for user ${userId} and sendDigest: ${sendDigest}. Error: ${error.stack}`);
             throw error;
         }
     };
@@ -240,6 +240,7 @@ class UserService {
     };
 
     #getUserOrThrow = async (userId) => {
+        console.debug(`Getting user ${userId}`);
         const user = await this.repo.getUserById(userId);
         if (!user) {
             console.error(`User with id: ${userId} not found`);

@@ -1,20 +1,21 @@
 'use strict';
 module.exports = (app, config, userService) => {
 
-    app.get('/api/user/:id', (req, res) => {
+    app.get('/api/user/:id', async (req, res) => {
         try {
-            const user = userService.getUserById;
+            const user = await userService.getUserById(req.params.id);
             if (!user) {
                 res.status(404).json("User Not Found");
             }
-            else {
-                // no need to send this to the caller, as it's an internal property
-                delete user.notificationPreferences.utcNotificationTime;
+            else {                
                 res.status(200).json(user);
             }
         } catch (error) {
             if (typeof error === 'ValidationError') {
                 res.status(422).json(`Invalid Input. ${error.message}`);
+            }
+            if (typeof error === 'NotFoundError') {
+                res.status(404).json(`User Not Found`);
             }
             else {
                 res.status(500).json(`Unexpected exception.`);
@@ -114,9 +115,5 @@ module.exports = (app, config, userService) => {
                 res.status(500).json(`Unexpected exception.`);
             }
         }
-    });
-
-    app.post('/api/notifications', async (req, res) =>{
-
     });
 };

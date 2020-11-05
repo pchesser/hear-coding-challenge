@@ -24,7 +24,8 @@ describe('User Service Tests', function() {
                     preferences :{
                         notificationTime: '08:00:00Z',
                         favoriteSubReddits: [],
-                        sendNewsletter: false
+                        sendDigest: false,
+                        timeZone: "Etc/UTC"
                     }
                 }
             },
@@ -51,19 +52,6 @@ describe('User Service Tests', function() {
         await expect(sut.addUser("email@fake.com", null)).to.eventually.be.rejectedWith(errors.ValidationError, 'firstName cannot be null');
     });
 
-    it('addUser should create a new user if the username is not in use', async function() {
-        const mockRepo = { };
-        
-        mockRepo.addUser = sinon.fake.resolves(true);
-        mockRepo.getUserByEmailAddress = sinon.fake.resolves(null);
-        const sut = new Sut(mockRepo);
-
-        await sut.addUser('bubba@fake.com', 'bubba');
-
-        mockRepo.getUserByEmailAddress.called.should.be.true;
-        mockRepo.addUser.called.should.be.true;
-    });
-    
     it('addUser should create a new user if the username is not in use', async function() {
         const mockRepo = { };
         

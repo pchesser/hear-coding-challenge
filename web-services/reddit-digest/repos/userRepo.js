@@ -121,7 +121,7 @@ class UserRepo {
             const collection = db.collection('users');
 
             console.log('querying');
-            const query = { "notificationPreferences.sendNewsletter": { "$eq": true } };
+            const query = { "notificationPreferences.sendDigest": { "$eq": true } };
 
             const cursor = collection.find(query);                        
             return cursor;
