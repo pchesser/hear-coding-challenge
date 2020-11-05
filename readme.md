@@ -7,6 +7,18 @@ The following tasks will run the various servers:
 "startDigestCreationPolling":"nodemon web-services\\reddit-digest\\digestCreationServer.js",
 "startDigestSendPolling":"nodemon web-services\\reddit-digest\\digestSendingServer.js"
 
+The Digest Creation Polling Service is set to run once every 24 hours, so that should be updated for testing. It can be updated in the config.json's reddit.digestCreationPollingInterval property.
+
+Likewise, the Digest Send Polling task is set to run once a minute, which may be adequate for testing. 
+
+The following API routes are supported, accepting application/json
+POST /api/user/ payload: {"emailAddress": "fake@email.com", "firstName": "test"}
+GET /api/user/{id}
+PUT /api/user/{id}/notificationtime payload: {"notificationTime": "08:00", "timeZone": "America/Denver"}
+PUT /api/user/{id}/subreddits payload {subreddits: ["funny", "politics"]}
+DELETE /api/user/{id}/subreddits payload {subreddits: [ "politics"]}
+PUT /api/user/{id}/senddigest payload {subreddits: true}
+
 ## Datastore Implementation Notes
 I chose MongoDB as the backing data store. A document store seemed like a good fit, especially for storage of the message templates. Normally I would have included scripts to create the collections/indexes, but created them directly through the GUI to save some time. Here is what was created.
 
